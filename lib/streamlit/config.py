@@ -454,6 +454,26 @@ _create_option(
     scriptable=True,
 )
 
+_create_option(
+    "client.toolbarMode",
+    description="""
+        Change the visibility of items in the toolbar and options menu (top right of
+        the app).
+
+        Allowed values:
+
+        * “auto”      : Show the developer options if the app is accessed through localhost
+                        and hide them otherwise.
+        * “developer” : Show the developer options.
+        * “viewer”    : Hide the developer options.
+        * “minimal”   : Show a minimal set of options on Streamlit Community Cloud
+                        and hide the menu locally or on custom deployments.
+""",
+    default_val="auto",
+    type_=str,
+    scriptable=True,
+)
+
 # Config Section: Runner #
 
 _create_section("runner", "Settings for how Streamlit executes your script")

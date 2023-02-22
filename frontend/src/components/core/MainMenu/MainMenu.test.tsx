@@ -15,13 +15,11 @@
  */
 
 import React from "react"
-import { screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 
 import { mount, render } from "src/lib/test_util"
 import { IMenuItem } from "src/hocs/withHostCommunication/types"
 
-import { GitInfo, IGitInfo } from "src/autogen/proto"
+import { Config, GitInfo, IGitInfo } from "src/autogen/proto"
 import { IDeployErrorDialog } from "src/components/core/StreamlitDialog/DeployErrorDialogs/types"
 import {
   DetachedHead,
@@ -34,7 +32,7 @@ import {
 import { getMetricsManagerForTest } from "src/lib/MetricsManagerTestUtils"
 
 import MainMenu, { Props } from "./MainMenu"
-import { waitFor } from "@testing-library/dom"
+import { fireEvent, RenderResult, waitFor } from "@testing-library/react"
 
 const { GitStates } = GitInfo
 
@@ -58,10 +56,47 @@ const getProps = (extend?: Partial<Props>): Props => ({
   hostIsOwner: false,
   gitInfo: null,
   metricsMgr: getMetricsManagerForTest(),
+  toolbarMode: Config.ToolbarMode.AUTO,
   ...extend,
 })
 
-describe("App", () => {
+async function openMenu(wrapper: RenderResult): Promise<void> {
+  fireEvent.click(wrapper.getByRole("button"))
+  await waitFor(() => expect(wrapper.findByRole("listbox")).toBeDefined())
+}
+
+function getMenuStructure(
+  renderResult: RenderResult
+): ({ type: "separator" } | { type: "option"; label: string })[][] {
+  return Array.from(
+    renderResult.baseElement.querySelectorAll('[role="listbox"]')
+  ).map(listBoxElement => {
+    return Array.from(
+      listBoxElement.querySelectorAll(
+        '[role=option] span:first-of-type, [data-testid="main-menu-divider"]'
+      )
+    ).map(d =>
+      d.getAttribute("data-testid") == "main-menu-divider"
+        ? { type: "separator" }
+        : { type: "option", label: d.textContent as string }
+    )
+  })
+}
+
+function mockWindowLocation(hostname: string): void {
+  // Mock window.location by creating a new object
+  // Source: https://www.benmvp.com/blog/mocking-window-location-methods-jest-jsdom/
+  // @ts-ignore
+  delete window.location
+
+  // @ts-ignore
+  window.location = {
+    assign: jest.fn(),
+    hostname: hostname,
+  }
+}
+
+describe("MainMenu", () => {
   it("renders without crashing", () => {
     const props = getProps()
     const wrapper = mount(<MainMenu {...props} />)
@@ -70,7 +105,6 @@ describe("App", () => {
   })
 
   it("should render host menu items", async () => {
-    const user = userEvent.setup()
     const items: IMenuItem[] = [
       {
         type: "separator",
@@ -93,7 +127,7 @@ describe("App", () => {
       hostMenuItems: items,
     })
     const wrapper = render(<MainMenu {...props} />)
-    await user.click(screen.getByRole("button"))
+    await openMenu(wrapper)
 
     await waitFor(() =>
       expect(
@@ -115,10 +149,9 @@ describe("App", () => {
   })
 
   it("should render core set of menu elements", async () => {
-    const user = userEvent.setup()
     const props = getProps()
     const wrapper = render(<MainMenu {...props} />)
-    await user.click(screen.getByRole("button"))
+    await openMenu(wrapper)
 
     await waitFor(() =>
       expect(
@@ -139,10 +172,9 @@ describe("App", () => {
   })
 
   it("should render deploy app menu item", async () => {
-    const user = userEvent.setup()
     const props = getProps({ gitInfo: {} })
     const wrapper = render(<MainMenu {...props} />)
-    await user.click(screen.getByRole("button"))
+    await openMenu(wrapper)
 
     await waitFor(() =>
       expect(
@@ -298,7 +330,6 @@ describe("App", () => {
   })
 
   it("should not render report a bug in core menu", async () => {
-    const user = userEvent.setup()
     const menuItems = {
       getHelpUrl: "testing",
       hideGetHelp: false,
@@ -307,7 +338,7 @@ describe("App", () => {
     }
     const props = getProps({ menuItems })
     const wrapper = render(<MainMenu {...props} />)
-    await user.click(screen.getByRole("button"))
+    await openMenu(wrapper)
 
     await waitFor(() =>
       expect(
@@ -317,7 +348,6 @@ describe("App", () => {
   })
 
   it("should render report a bug in core menu", async () => {
-    const user = userEvent.setup()
     const menuItems = {
       reportABugUrl: "testing",
       hideGetHelp: false,
@@ -326,7 +356,7 @@ describe("App", () => {
     }
     const props = getProps({ menuItems })
     const wrapper = render(<MainMenu {...props} />)
-    await user.click(screen.getByRole("button"))
+    await openMenu(wrapper)
 
     await waitFor(() =>
       expect(
@@ -336,15 +366,8 @@ describe("App", () => {
   })
 
   it("should not render dev menu when hostIsOwner is false and not on localhost", () => {
-    // set isLocalhost to false by deleting window.location.
-    // Source: https://www.benmvp.com/blog/mocking-window-location-methods-jest-jsdom/
-    // @ts-ignore
-    delete window.location
+    mockWindowLocation("remoteHost")
 
-    // @ts-ignore
-    window.location = {
-      assign: jest.fn(),
-    }
     const props = getProps()
     const wrapper = mount(<MainMenu {...props} />)
     const popoverContent = wrapper.find("StatefulPopover").prop("content")
@@ -364,6 +387,99 @@ describe("App", () => {
       "Print",
       "Record a screencast",
       "About",
+    ])
+  })
+
+  it.each([
+    // # Test cases for toolbarMode = Config.ToolbarMode.AUTO
+    // Show developer menu only for localhost.
+    ["localhost", false, Config.ToolbarMode.AUTO, true],
+    ["127.0.0.1", false, Config.ToolbarMode.AUTO, true],
+    ["remoteHost", false, Config.ToolbarMode.AUTO, false],
+    // Show developer menu only for all host when hostIsOwner == true.
+    ["localhost", true, Config.ToolbarMode.AUTO, true],
+    ["127.0.0.1", true, Config.ToolbarMode.AUTO, true],
+    ["remoteHost", true, Config.ToolbarMode.AUTO, true],
+    // # Test cases for toolbarMode = Config.ToolbarMode.DEVELOPER
+    // Show developer menu always regardless of other parameters
+    ["localhost", false, Config.ToolbarMode.DEVELOPER, true],
+    ["127.0.0.1", false, Config.ToolbarMode.DEVELOPER, true],
+    ["remoteHost", false, Config.ToolbarMode.DEVELOPER, true],
+    ["localhost", true, Config.ToolbarMode.DEVELOPER, true],
+    ["127.0.0.1", true, Config.ToolbarMode.DEVELOPER, true],
+    ["remoteHost", true, Config.ToolbarMode.DEVELOPER, true],
+    // # Test cases for toolbarMode = Config.ToolbarMode.VIEWER
+    // Hide developer menu always regardless of other parameters
+    ["localhost", false, Config.ToolbarMode.VIEWER, false],
+    ["127.0.0.1", false, Config.ToolbarMode.VIEWER, false],
+    ["remoteHost", false, Config.ToolbarMode.VIEWER, false],
+    ["localhost", true, Config.ToolbarMode.VIEWER, false],
+    ["127.0.0.1", true, Config.ToolbarMode.VIEWER, false],
+    ["remoteHost", true, Config.ToolbarMode.VIEWER, false],
+  ])(
+    "should render or not render dev menu depending on hostname, host ownership, toolbarMode[%s, %s, %s]",
+    async (hostname, hostIsOwner, toolbarMode, devMenuVisible) => {
+      mockWindowLocation(hostname)
+
+      const props = getProps({ hostIsOwner, toolbarMode })
+      const wrapper = render(<MainMenu {...props} />)
+      await openMenu(wrapper)
+
+      const menuStructure = getMenuStructure(wrapper)
+      expect(menuStructure).toHaveLength(devMenuVisible ? 2 : 1)
+    }
+  )
+
+  it.each([
+    [Config.ToolbarMode.AUTO],
+    [Config.ToolbarMode.DEVELOPER],
+    [Config.ToolbarMode.VIEWER],
+    [Config.ToolbarMode.MINIMAL],
+  ])("should render host menu items if available[%s]", async toolbarMode => {
+    const props = getProps({
+      toolbarMode,
+      hostMenuItems: [
+        { label: "Host menu item", key: "host-item", type: "text" },
+      ],
+    })
+    const wrapper = render(<MainMenu {...props} />)
+    await openMenu(wrapper)
+
+    const menuStructure = getMenuStructure(wrapper)
+    expect(menuStructure[0]).toContainEqual({
+      type: "option",
+      label: "Host menu item",
+    })
+  })
+
+  it("should hide hamburger when toolbarMode is Minimal and no host items", async () => {
+    const props = getProps({
+      toolbarMode: Config.ToolbarMode.MINIMAL,
+      hostMenuItems: [],
+    })
+
+    const wrapper = render(<MainMenu {...props} />)
+
+    expect(wrapper.queryByRole("button")).toBeNull()
+  })
+
+  it("should skip divider from host menu items if it is at the beginning and end", async () => {
+    const props = getProps({
+      toolbarMode: Config.ToolbarMode.MINIMAL,
+      hostMenuItems: [
+        { type: "separator" },
+        { type: "text", label: "View all apps", key: "viewAllApps" },
+        { type: "separator" },
+        { type: "text", label: "About Streamlit Cloud", key: "about" },
+        { type: "separator" },
+      ],
+    })
+    const wrapper = render(<MainMenu {...props} />)
+    await openMenu(wrapper)
+
+    const menuStructure = getMenuStructure(wrapper)
+    expect(menuStructure).toEqual([
+      [{ type: "option", label: "View all apps" }],
     ])
   })
 })

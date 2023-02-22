@@ -148,6 +148,7 @@ interface State {
   allowRunOnSave: boolean
   scriptFinishedHandlers: (() => void)[]
   developerMode: boolean
+  toolbarMode: Config.ToolbarMode
   themeHash: string | null
   gitInfo: IGitInfo | null
   formsData: FormsData
@@ -237,6 +238,7 @@ export class App extends PureComponent<Props, State> {
       // true as well for consistency.
       hideTopBar: true,
       hideSidebarNav: true,
+      toolbarMode: Config.ToolbarMode.MINIMAL,
       latestRunTime: performance.now(),
     }
 
@@ -761,6 +763,7 @@ export class App extends PureComponent<Props, State> {
         allowRunOnSave: config.allowRunOnSave,
         hideTopBar: config.hideTopBar,
         hideSidebarNav: config.hideSidebarNav,
+        toolbarMode: config.toolbarMode,
         appPages: newSessionProto.appPages,
         currentPageScriptHash: newPageScriptHash,
         latestRunTime: performance.now(),
@@ -1523,6 +1526,7 @@ export class App extends PureComponent<Props, State> {
                 canDeploy={SessionInfo.isSet() && !SessionInfo.isHello}
                 menuItems={menuItems}
                 metricsMgr={this.metricsMgr}
+                toolbarMode={this.state.toolbarMode}
               />
             </Header>
 
