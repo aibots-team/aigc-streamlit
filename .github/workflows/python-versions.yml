@@ -72,6 +72,68 @@ jobs:
         run: make integration-tests
       - name: CLI Smoke Tests
         run: make cli-smoke-tests
+      - name: Set CONSTRAINTS_FILE env variable
+        run: |
+          mkdir -p /tmp/constraints
+          echo "CONSTRAINTS_FILE=/tmp/constraints/constraints-${PYTHON_VERSION}.txt" >> $GITHUB_ENV
+      - name: Generate constraint file for Python ${{ env.PYTHON_VERSION }}
+        if: ${{ always() }}
+        run: |
+          pip freeze | grep -v "\-e git" >> "${CONSTRAINTS_FILE}"
+      - name: Diff constraint file
+        if: ${{ always() }}
+        run: |
+          CONSTRAINT_URL="https://raw.githubusercontent.com/streamlit/streamlit/constraints-develop/constraints-${PYTHON_VERSION}.txt"
+          diff -y <(cat "${CONSTRAINTS_FILE}") <(curl "${CONSTRAINT_URL}") || true
+      - name: Upload constraints file
+        uses: actions/upload-artifact@v3
+        with:
+          name: constraints
+          path: ${{ env.CONSTRAINTS_FILE }}
+          if-no-files-found: error
+
+  py_constraint:
+    needs:
+      - py_version
+    permissions:
+      # Additional permission needed to upload constraints
+      contents: write
+
+    runs-on: ubuntu-latest
+    if: github.repository == 'streamlit/streamlit-sfc-gh-kbregula-fork' && github.event_name == 'push' && github.ref_name == 'develop'
+    env:
+      TARGET_BRANCH: constraints-${{ github.ref_name }}
+
+    steps:
+      - name: Checkout branch "${{ env.TARGET_BRANCH }}"
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: constraints
+          path: .
+
+      - name: Commit and push constraint files
+        run: |
+          git config --local user.email "core+streamlitbot-github@streamlit.io"
+          git config --local user.name "Automated GitHub Actions commit"
+          if ! git diff --color --exit-code --ignore-matching-lines="^#.*"
+          then
+            git commit --all --message "Updating constraints. Github run id:${GITHUB_RUN_ID}
+
+            This update in constraints is automatically committed by the CI based on
+            '${GITHUB_REF}' in the '${GITHUB_REPOSITORY}' repository with commit sha ${GITHUB_SHA}.
+
+            The action that build those constraints can be found at https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/
+            "
+            git push "origin" "HEAD:${TARGET_BRANCH}";
+          else
+            echo "No changes"
+          fi
+        env:
+          TARGET_BRANCH: constraints-${{ github.ref_name }}
 
   py_snowflake:
     runs-on: ubuntu-latest
