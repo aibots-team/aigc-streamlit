@@ -27,14 +27,12 @@ defaults:
   run:
     shell: bash --login -eo pipefail {0}
 
-jobs:
-  py_version:
-    runs-on: ubuntu-latest
+env:
+  FORCE_COLOR: "1"
 
-    strategy:
-      fail-fast: false
-      matrix:
-        min-or-max: ["min", "max"]
+jobs:
+  build_info:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Streamlit code
@@ -43,15 +41,43 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
           submodules: 'recursive'
-
-      # Set $PYTHON_VERSION from either $PYTHON_MIN_VERSION or $PYTHON_MAX_VERSION,
-      # depending on our 'min-or-max' strategy matrix value.
+          fetch-depth: 2
+      - run: |
+          python --version
+        env:
+          COMMIT_REF: ${{ github.sha }}
       - name: Set Python version vars
-        uses: ./.github/actions/set_python_versions
-      - if: ${{ matrix.min-or-max == 'min' }}
-        run: echo "PYTHON_VERSION=${{ env.PYTHON_MIN_VERSION }}" >> $GITHUB_ENV
-      - if: ${{ matrix.min-or-max == 'max' }}
-        run: echo "PYTHON_VERSION=${{ env.PYTHON_MAX_VERSION }}" >> $GITHUB_ENV
+        id: build_info
+        uses: ./.github/actions/build_info
+
+
+    outputs:
+      PYTHON_VERSIONS: ${{ steps.build_info.outputs.PYTHON_VERSIONS }}
+
+  py_version:
+    needs:
+      - build_info
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: "${{fromJson(needs.build_info.outputs.PYTHON_VERSIONS)}}"
+
+    name: >
+      Python ${{ matrix.python_version }}: Python tests, Integration tests, CLI Smoke tests
+
+    env:
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout Streamlit code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+          submodules: 'recursive'
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
@@ -149,6 +175,9 @@ jobs:
         (github.event_name == 'schedule')
         )
 
+    name: >
+      Python 3.8: Python tests for Snowflake
+
     steps:
       - name: Checkout Streamlit code
         uses: actions/checkout@v3
@@ -159,7 +188,7 @@ jobs:
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: '3.8'
       - name: Decrypt credentials
         run: ./.github/scripts/decrypt_credentials.sh
         env:
