@@ -34,6 +34,8 @@ jobs:
   build_info:
     runs-on: ubuntu-latest
 
+    name: "Build info"
+
     steps:
       - name: Checkout Streamlit code
         uses: actions/checkout@v3
@@ -42,14 +44,9 @@ jobs:
           persist-credentials: false
           submodules: 'recursive'
           fetch-depth: 2
-      - run: |
-          python --version
-        env:
-          COMMIT_REF: ${{ github.sha }}
       - name: Set Python version vars
         id: build_info
         uses: ./.github/actions/build_info
-
 
     outputs:
       PYTHON_VERSIONS: ${{ steps.build_info.outputs.PYTHON_VERSIONS }}
