@@ -30,6 +30,7 @@ GITHUB_CONTEXT_ENV_VAR = "GITHUB_CONTEXT"
 GITHUB_OUTPUT_ENV_VAR = "GITHUB_OUTPUT"
 GITHUB_ENV_ENV_VAR = "GITHUB_ENV"
 
+# The walrus operator requires Python 3.8 or newer
 if missing_envs := [
     env_var
     for env_var in [GITHUB_CONTEXT_ENV_VAR, GITHUB_OUTPUT_ENV_VAR, GITHUB_ENV_ENV_VAR]
