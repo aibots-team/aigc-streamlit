@@ -96,6 +96,7 @@ jobs:
       - name: CLI Smoke Tests
         run: make cli-smoke-tests
       - name: Set CONSTRAINTS_FILE env variable
+        if: ${{ always() }}
         run: |
           mkdir -p /tmp/constraints
           echo "CONSTRAINTS_FILE=/tmp/constraints/constraints-${PYTHON_VERSION}.txt" >> $GITHUB_ENV
