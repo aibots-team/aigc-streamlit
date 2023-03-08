@@ -103,7 +103,7 @@ jobs:
       - name: Generate constraint file for Python ${{ env.PYTHON_VERSION }}
         if: ${{ always() }}
         run: |
-          pip freeze | grep -v "\-e git" >> "${CONSTRAINTS_FILE}"
+          pip freeze | grep -v "\-e git" | tee "${CONSTRAINTS_FILE}"
       - name: Diff constraint file
         if: ${{ always() }}
         run: |
