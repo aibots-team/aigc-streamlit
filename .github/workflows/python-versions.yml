@@ -141,9 +141,10 @@ jobs:
 
       - name: Commit and push constraint files
         run: |
+          git add .
           git config --local user.email "core+streamlitbot-github@streamlit.io"
           git config --local user.name "Automated GitHub Actions commit"
-          if ! git diff --color --exit-code --ignore-matching-lines="^#.*"
+          if ! git diff --cached --color --exit-code --ignore-matching-lines="^#.*"
           then
             git commit --all --message "Updating constraints. Github run id:${GITHUB_RUN_ID}
 
