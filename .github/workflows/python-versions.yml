@@ -108,7 +108,7 @@ jobs:
         if: ${{ always() }}
         run: |
           CONSTRAINT_URL="https://raw.githubusercontent.com/streamlit/streamlit/constraints-develop/constraints-${PYTHON_VERSION}.txt"
-          diff -y <(cat "${CONSTRAINTS_FILE}") <(curl "${CONSTRAINT_URL}") || true
+          diff -y <(echo "Local"; cat "${CONSTRAINTS_FILE}") <(echo "Remote"; curl "${CONSTRAINT_URL}") || true
       - name: Upload constraints file
         uses: actions/upload-artifact@v3
         with:
