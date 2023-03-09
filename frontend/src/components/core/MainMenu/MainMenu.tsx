@@ -324,19 +324,27 @@ function getPreferredMenuOrder(
   let preferredMenuOrder: any[]
   if (props.toolbarMode == Config.ToolbarMode.MINIMAL) {
     // If toolbar mode == minimal then show only host menu items if any.
-    preferredMenuOrder = hostMenuItems
+    preferredMenuOrder = [
+      coreMenuItems.report,
+      coreMenuItems.community,
+      coreMenuItems.DIVIDER,
+      ...(hostMenuItems.length > 0 ? hostMenuItems : [coreMenuItems.DIVIDER]),
+      coreMenuItems.about,
+    ]
+
+    preferredMenuOrder = preferredMenuOrder.filter(d => d)
     // If the first or last item is a divider, delete it, because
     // we don't want to start/end the menu with it.
     // TODO(sfc-gh-kbregula): We should use Array#at when supported by
     //  browsers/cypress or transpilers.
     //  See: https://github.com/tc39/proposal-relative-indexing-method
-    if (
+    while (
       preferredMenuOrder.length > 0 &&
       preferredMenuOrder[0] == coreMenuItems.DIVIDER
     ) {
       preferredMenuOrder.shift()
     }
-    if (
+    while (
       preferredMenuOrder.length > 0 &&
       preferredMenuOrder.at(preferredMenuOrder.length - 1) ==
         coreMenuItems.DIVIDER
@@ -446,6 +454,12 @@ function MainMenu(props: Props): ReactElement {
 
     onClickDeployApp()
   }, [props.gitInfo, props.isDeployErrorModalOpen, onClickDeployApp])
+
+  const showAboutMenu =
+    props.toolbarMode != Config.ToolbarMode.MINIMAL ||
+    (props.toolbarMode == Config.ToolbarMode.MINIMAL &&
+      props.menuItems?.aboutSectionMd)
+
   const coreMenuItems = {
     DIVIDER: { isDivider: true },
     rerun: {
@@ -480,7 +494,9 @@ function MainMenu(props: Props): ReactElement {
         },
       }),
     settings: { onClick: props.settingsCallback, label: "Settings" },
-    about: { onClick: props.aboutCallback, label: "About" },
+    ...(showAboutMenu && {
+      about: { onClick: props.aboutCallback, label: "About" },
+    }),
   }
 
   const coreDevMenuItems = {

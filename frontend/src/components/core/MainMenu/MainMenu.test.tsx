@@ -482,4 +482,123 @@ describe("MainMenu", () => {
       [{ type: "option", label: "View all apps" }],
     ])
   })
+
+  it.each([
+    [
+      ["getHelpUrl", "reportABugUrl", "aboutSectionMd"],
+      [
+        {
+          label: "Report a bug",
+          type: "option",
+        },
+        {
+          label: "Get help",
+          type: "option",
+        },
+        {
+          type: "separator",
+        },
+        {
+          label: "About",
+          type: "option",
+        },
+      ],
+    ],
+    [
+      ["getHelpUrl"],
+      [
+        {
+          label: "Get help",
+          type: "option",
+        },
+      ],
+    ],
+    [
+      ["reportABugUrl"],
+      [
+        {
+          label: "Report a bug",
+          type: "option",
+        },
+      ],
+    ],
+    [
+      ["aboutSectionMd"],
+      [
+        {
+          label: "About",
+          type: "option",
+        },
+      ],
+    ],
+  ])(
+    "should render custom items in minimal mode[%s]",
+    async (menuItems, expectedMenuItems) => {
+      const allMenuItems = {
+        getHelpUrl: "https://www.extremelycoolapp.com/help",
+        reportABugUrl: "https://www.extremelycoolapp.com/bug",
+        aboutSectionMd: "# This is a header. This is an *extremely* cool app!",
+      }
+      const props = getProps({
+        toolbarMode: Config.ToolbarMode.MINIMAL,
+        menuItems: Object.fromEntries(
+          Object.entries(allMenuItems).filter(d => menuItems.includes(d[0]))
+        ),
+      })
+
+      const wrapper = render(<MainMenu {...props} />)
+      await openMenu(wrapper)
+
+      const menuStructure = getMenuStructure(wrapper)
+      expect(menuStructure).toEqual([expectedMenuItems])
+    }
+  )
+
+  it("should render host menu items and custom items in minimal mode", async () => {
+    const props = getProps({
+      toolbarMode: Config.ToolbarMode.MINIMAL,
+      hostMenuItems: [
+        { type: "separator" },
+        { type: "text", label: "View all apps", key: "viewAllApps" },
+        { type: "separator" },
+        { type: "text", label: "About Streamlit Cloud", key: "about" },
+        { type: "separator" },
+      ],
+      menuItems: {
+        getHelpUrl: "https://www.extremelycoolapp.com/help",
+        reportABugUrl: "https://www.extremelycoolapp.com/bug",
+        aboutSectionMd: "# This is a header. This is an *extremely* cool app!",
+      },
+    })
+    const wrapper = render(<MainMenu {...props} />)
+    await openMenu(wrapper)
+
+    const menuStructure = getMenuStructure(wrapper)
+    expect(menuStructure).toEqual([
+      [
+        {
+          label: "Report a bug",
+          type: "option",
+        },
+        {
+          label: "Get help",
+          type: "option",
+        },
+        {
+          type: "separator",
+        },
+        {
+          label: "View all apps",
+          type: "option",
+        },
+        {
+          type: "separator",
+        },
+        {
+          label: "About",
+          type: "option",
+        },
+      ],
+    ])
+  })
 })
