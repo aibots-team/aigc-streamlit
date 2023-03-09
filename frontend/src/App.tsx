@@ -148,7 +148,6 @@ interface State {
   menuItems?: PageConfig.IMenuItems | null
   allowRunOnSave: boolean
   scriptFinishedHandlers: (() => void)[]
-  developerMode: boolean
   toolbarMode: Config.ToolbarMode
   themeHash: string | null
   gitInfo: IGitInfo | null
@@ -223,9 +222,6 @@ export class App extends PureComponent<Props, State> {
       menuItems: undefined,
       allowRunOnSave: true,
       scriptFinishedHandlers: [],
-      // A hack for now to get theming through. Product to think through how
-      // developer mode should be designed in the long term.
-      developerMode: window.location.host.includes("localhost"),
       themeHash: null,
       gitInfo: null,
       formsData: createFormsData(),
@@ -1319,7 +1315,10 @@ export class App extends PureComponent<Props, State> {
       allowRunOnSave: this.state.allowRunOnSave,
       onSave: this.saveSettings,
       onClose: () => {},
-      developerMode: this.state.developerMode,
+      developerMode: showDevelopmentMenu(
+        this.props.hostCommunication.currentState.isOwner,
+        this.state.toolbarMode
+      ),
       openThemeCreator: this.openThemeCreatorDialog,
       animateModal,
       metricsMgr: this.metricsMgr,
