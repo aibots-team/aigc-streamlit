@@ -146,6 +146,22 @@ export const isLocalhost = (): boolean => {
   )
 }
 
+export const showDevelopmentMenu = (
+  hostIsOwner: boolean | undefined,
+  toolbarMode: Config.ToolbarMode
+) => {
+  if (toolbarMode == Config.ToolbarMode.DEVELOPER) {
+    return true
+  }
+  if (
+    Config.ToolbarMode.VIEWER == toolbarMode ||
+    Config.ToolbarMode.MINIMAL == toolbarMode
+  ) {
+    return false
+  }
+  return hostIsOwner || isLocalhost()
+}
+
 export interface MenuItemProps {
   item: any
   "aria-selected": boolean
@@ -576,22 +592,10 @@ function MainMenu(props: Props): ReactElement {
     }
   }
 
-  const showDevelopmentMenu = (() => {
-    const { hostIsOwner, toolbarMode } = props
-
-    if (toolbarMode == Config.ToolbarMode.DEVELOPER) {
-      return true
-    }
-    if (
-      Config.ToolbarMode.VIEWER == toolbarMode ||
-      Config.ToolbarMode.MINIMAL == toolbarMode
-    ) {
-      return false
-    }
-    return hostIsOwner || isLocalhost()
-  })()
-
-  const devMenuItems: any[] = showDevelopmentMenu
+  const devMenuItems: any[] = showDevelopmentMenu(
+    props.hostIsOwner,
+    props.toolbarMode
+  )
     ? getDevMenuItems(coreDevMenuItems, showDeploy)
     : []
 

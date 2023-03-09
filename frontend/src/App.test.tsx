@@ -50,6 +50,7 @@ import { DialogType, StreamlitDialog } from "./components/core/StreamlitDialog"
 import { App, Props } from "./App"
 import MainMenu from "./components/core/MainMenu"
 import ToolbarActions from "./components/core/ToolbarActions"
+import { Config } from "./autogen/proto"
 
 jest.mock("src/lib/ConnectionManager")
 
@@ -1222,6 +1223,8 @@ describe("Test Main Menu shortcut functionality", () => {
     const props = getProps()
     const wrapper = shallow<App>(<App {...props} />)
     wrapper.instance().openClearCacheDialog = jest.fn()
+
+    wrapper.instance().setState({ toolbarMode: Config.ToolbarMode.DEVELOPER })
 
     // @ts-ignore
     wrapper.instance().keyHandlers.CLEAR_CACHE()

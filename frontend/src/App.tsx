@@ -120,6 +120,7 @@ import withScreencast, {
 // Used to import fonts + responsive reboot items
 import "src/assets/css/theme.scss"
 import { ensureError } from "./lib/ErrorHandling"
+import { showDevelopmentMenu } from "./components/core/MainMenu/MainMenu"
 
 export interface Props {
   screenCast: ScreenCastHOC
@@ -289,7 +290,12 @@ export class App extends PureComponent<Props, State> {
       this.rerunScript()
     },
     CLEAR_CACHE: () => {
-      if (isLocalhost() || this.props.hostCommunication.currentState.isOwner) {
+      if (
+        showDevelopmentMenu(
+          this.props.hostCommunication.currentState.isOwner,
+          this.state.toolbarMode
+        )
+      ) {
         this.openClearCacheDialog()
       }
     },
