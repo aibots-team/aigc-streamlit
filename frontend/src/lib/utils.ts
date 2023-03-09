@@ -423,3 +423,21 @@ export function generateUID(): string {
 export function getEmbeddingIdClassName(embeddingId: string): string {
   return `stAppEmbeddingId-${embeddingId}`
 }
+
+export const TESTING_QUERY_PARAM_KEY = "testing"
+export function isTesting(): boolean {
+  const urlParams = new URLSearchParams(window.location.search)
+  let isTesting = false
+  urlParams.forEach((paramValue, paramKey) => {
+    paramKey = paramKey.toString().toLowerCase()
+    paramValue = paramValue.toString().toLowerCase()
+    if (
+      paramKey === TESTING_QUERY_PARAM_KEY.toLowerCase() &&
+      paramValue === "true"
+    ) {
+      isTesting = true
+      return isTesting
+    }
+  })
+  return isTesting
+}

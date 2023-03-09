@@ -26,6 +26,7 @@ import AppView from "src/components/core/AppView"
 import StatusWidget from "src/components/core/StatusWidget"
 import MainMenu, { isLocalhost } from "src/components/core/MainMenu"
 import ToolbarActions from "src/components/core/ToolbarActions"
+import DeployButton from "src/components/core/DeployButton"
 import Header from "src/components/core/Header"
 import {
   DialogProps,
@@ -43,47 +44,48 @@ import { ConnectionState } from "src/lib/ConnectionState"
 import { ScriptRunState } from "src/lib/ScriptRunState"
 import { SessionEventDispatcher } from "src/lib/SessionEventDispatcher"
 import {
-  setCookie,
+  generateUID,
+  getElementWidgetID,
+  getEmbeddingIdClassName,
   getIFrameEnclosingApp,
   hashString,
-  isEmbed,
-  isPaddingDisplayed,
-  isToolbarDisplayed,
   isColoredLineDisplayed,
-  isScrollingHidden,
-  isFooterDisplayed,
-  isLightTheme,
   isDarkTheme,
+  isEmbed,
+  isTesting,
+  isFooterDisplayed,
   isInChildFrame,
+  isLightTheme,
+  isPaddingDisplayed,
+  isScrollingHidden,
+  isToolbarDisplayed,
   notUndefined,
-  getElementWidgetID,
-  generateUID,
-  getEmbeddingIdClassName,
+  setCookie,
 } from "src/lib/utils"
 import { BaseUriParts } from "src/lib/UriUtil"
 import {
+  AppPage,
   BackMsg,
+  Config,
   CustomThemeConfig,
   Delta,
   ForwardMsg,
   ForwardMsgMetadata,
+  GitInfo,
+  IAppPage,
+  IGitInfo,
   Initialize,
   NewSession,
   PageConfig,
   PageInfo,
   PageNotFound,
-  PagesChanged,
   PageProfile,
+  PagesChanged,
   SessionEvent,
-  WidgetStates,
   SessionStatus,
-  Config,
-  IGitInfo,
-  GitInfo,
-  IAppPage,
-  AppPage,
+  WidgetStates,
 } from "src/autogen/proto"
-import { without, concat, noop } from "lodash"
+import { concat, noop, without } from "lodash"
 
 import { RERUN_PROMPT_MODAL_DIALOG } from "src/lib/baseconsts"
 import { SessionInfo } from "src/lib/SessionInfo"
@@ -96,10 +98,10 @@ import { ComponentRegistry } from "src/components/widgets/CustomComponent"
 import { handleFavicon } from "src/components/elements/Favicon"
 
 import {
-  CUSTOM_THEME_NAME,
   createAutoTheme,
   createPresetThemes,
   createTheme,
+  CUSTOM_THEME_NAME,
   getCachedTheme,
   isPresetTheme,
   ThemeConfig,
@@ -1250,6 +1252,21 @@ export class App extends PureComponent<Props, State> {
     }
   }
 
+  /**
+   * Shows a dialog with Deployment instructions
+   */
+  openDeployDialog = (): void => {
+    const deployDialogProps: DialogProps = {
+      type: DialogType.DEPLOY_DIALOG,
+      onClose: this.closeDialog,
+      showDeployError: this.showDeployError,
+      gitInfo: this.state.gitInfo,
+      isDeployErrorModalOpen:
+        this.state.dialog?.type === DialogType.DEPLOY_ERROR,
+    }
+    this.openDialog(deployDialogProps)
+  }
+
   openThemeCreatorDialog = (): void => {
     const newDialog: DialogProps = {
       type: DialogType.THEME_CREATOR,
@@ -1403,6 +1420,24 @@ export class App extends PureComponent<Props, State> {
     return queryString.startsWith("?") ? queryString.substring(1) : queryString
   }
 
+  isInCloudEnvironment = (): boolean => {
+    const { menuItems } = this.props.hostCommunication.currentState
+    return menuItems && menuItems?.length > 0
+  }
+
+  showDeployButton = (): boolean => {
+    if (isTesting()) {
+      return true
+    }
+
+    return (
+      isLocalhost() &&
+      !this.isInCloudEnvironment() &&
+      SessionInfo.isSet() &&
+      !SessionInfo.isHello
+    )
+  }
+
   render(): JSX.Element {
     const {
       allowRunOnSave,
@@ -1498,6 +1533,14 @@ export class App extends PureComponent<Props, State> {
                     }
                   />
                 </>
+              )}
+              {this.showDeployButton() && (
+                <DeployButton
+                  onClick={() => {
+                    this.sendLoadGitInfoBackMsg()
+                    this.openDeployDialog()
+                  }}
+                />
               )}
               <MainMenu
                 isServerConnected={this.isServerConnected()}

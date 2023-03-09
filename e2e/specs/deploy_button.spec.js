@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-import React from "react"
-import { IDeployErrorDialog } from "./types"
-import { StyledParagraph } from "./styled-components"
+describe("displays deploy button correctly", () => {
+  before(() => {
+    cy.loadApp("http://localhost:3000/?testing=true");
+  });
 
-function UncommittedChanges(repository: string): IDeployErrorDialog {
-  return {
-    title: "Unsynced changes",
-    body: (
-      <StyledParagraph>
-        The Git repo has uncommitted changes. You may want to commit them
-        before continuing.
-      </StyledParagraph>
-    ),
-  }
-}
+  it("deploy button matches the snapshot", () => {
+    cy.get("div[class='stDeployButton']").matchThemedSnapshots(
+      "deploy_button"
+    );
+  });
 
-export default UncommittedChanges
+  it("deploy dialog matches the snapshot", () => {
+    cy.get("div[class='stDeployButton'] > button").click({force: true})
+    cy.get("div[role='dialog']").matchImageSnapshot(
+      "deploy_dialog_opened"
+    );
+  })
+});

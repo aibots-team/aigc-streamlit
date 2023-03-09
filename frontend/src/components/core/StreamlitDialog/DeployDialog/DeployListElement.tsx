@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-import React from "react"
-import { IDeployErrorDialog } from "./types"
-import { StyledParagraph } from "./styled-components"
+import React, { ReactElement } from "react"
+import { StyledElement } from "./styled-components"
+import Checkmark from "src/assets/svg/checkmark.svg"
 
-function UncommittedChanges(repository: string): IDeployErrorDialog {
-  return {
-    title: "Unsynced changes",
-    body: (
-      <StyledParagraph>
-        The Git repo has uncommitted changes. You may want to commit them
-        before continuing.
-      </StyledParagraph>
-    ),
-  }
+export interface IDeployListElementProps {
+  children?: React.ReactNode
+  extraSpacing?: boolean
 }
 
-export default UncommittedChanges
+function DeployListElement(props: IDeployListElementProps): ReactElement {
+  const { children, extraSpacing } = props
+  return (
+    <StyledElement extraSpacing={extraSpacing}>
+      <img src={Checkmark} alt={"Checkmark"} />
+      <span>{children}</span>
+    </StyledElement>
+  )
+}
+
+export default DeployListElement

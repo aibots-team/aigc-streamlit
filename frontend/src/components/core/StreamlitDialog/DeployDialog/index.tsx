@@ -14,20 +14,4 @@
  * limitations under the License.
  */
 
-import React from "react"
-import { IDeployErrorDialog } from "./types"
-import { StyledParagraph } from "./styled-components"
-
-function UncommittedChanges(repository: string): IDeployErrorDialog {
-  return {
-    title: "Unsynced changes",
-    body: (
-      <StyledParagraph>
-        The Git repo has uncommitted changes. You may want to commit them
-        before continuing.
-      </StyledParagraph>
-    ),
-  }
-}
-
-export default UncommittedChanges
+export * from "./DeployDialog"

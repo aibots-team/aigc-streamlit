@@ -14,20 +14,11 @@
  * limitations under the License.
  */
 
-import React from "react"
-import { IDeployErrorDialog } from "./types"
-import { StyledParagraph } from "./styled-components"
+import styled from "@emotion/styled"
 
-function UncommittedChanges(repository: string): IDeployErrorDialog {
-  return {
-    title: "Unsynced changes",
-    body: (
-      <StyledParagraph>
-        The Git repo has uncommitted changes. You may want to commit them
-        before continuing.
-      </StyledParagraph>
-    ),
-  }
-}
-
-export default UncommittedChanges
+export const DeployButtonContainer = styled.div(({ theme }) => ({
+  display: "flex",
+  gap: theme.spacing.sm,
+  alignItems: "center",
+  lineHeight: theme.iconSizes.md,
+}))
