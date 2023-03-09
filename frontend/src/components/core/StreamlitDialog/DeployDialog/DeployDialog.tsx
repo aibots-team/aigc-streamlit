@@ -39,7 +39,7 @@ import {
 } from "src/components/core/StreamlitDialog/DeployErrorDialogs/index"
 import { getDeployAppUrl } from "src/components/core/MainMenu/MainMenu"
 import { GitInfo, IGitInfo } from "src/autogen/proto"
-import { MetricsManager } from "../../../../lib/MetricsManager"
+import { MetricsManager } from "src/lib/MetricsManager"
 
 const { GitStates } = GitInfo
 
