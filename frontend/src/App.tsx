@@ -1263,6 +1263,7 @@ export class App extends PureComponent<Props, State> {
       gitInfo: this.state.gitInfo,
       isDeployErrorModalOpen:
         this.state.dialog?.type === DialogType.DEPLOY_ERROR,
+      metricsMgr: this.metricsMgr,
     }
     this.openDialog(deployDialogProps)
   }
@@ -1438,6 +1439,14 @@ export class App extends PureComponent<Props, State> {
     )
   }
 
+  deployButtonClicked = (): void => {
+    if (!isTesting()) {
+      this.metricsMgr.enqueue("deployButtonInApp", { clicked: true })
+    }
+    this.sendLoadGitInfoBackMsg()
+    this.openDeployDialog()
+  }
+
   render(): JSX.Element {
     const {
       allowRunOnSave,
@@ -1535,12 +1544,7 @@ export class App extends PureComponent<Props, State> {
                 </>
               )}
               {this.showDeployButton() && (
-                <DeployButton
-                  onClick={() => {
-                    this.sendLoadGitInfoBackMsg()
-                    this.openDeployDialog()
-                  }}
-                />
+                <DeployButton onClick={this.deployButtonClicked.bind(this)} />
               )}
               <MainMenu
                 isServerConnected={this.isServerConnected()}

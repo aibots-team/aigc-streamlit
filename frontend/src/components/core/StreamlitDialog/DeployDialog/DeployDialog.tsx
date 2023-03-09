@@ -39,6 +39,7 @@ import {
 } from "src/components/core/StreamlitDialog/DeployErrorDialogs/index"
 import { getDeployAppUrl } from "src/components/core/MainMenu/MainMenu"
 import { GitInfo, IGitInfo } from "src/autogen/proto"
+import { MetricsManager } from "../../../../lib/MetricsManager"
 
 const { GitStates } = GitInfo
 
@@ -52,12 +53,15 @@ export interface DeployDialogProps {
   ) => void
   isDeployErrorModalOpen: boolean
   gitInfo: IGitInfo | null
+  metricsMgr: MetricsManager
 }
 
 export function DeployDialog(props: DeployDialogProps): ReactElement {
-  const { onClose } = props
+  const { onClose, metricsMgr } = props
   const onClickDeployApp = useCallback((): void => {
-    const { showDeployError, isDeployErrorModalOpen, gitInfo } = props
+    const { showDeployError, isDeployErrorModalOpen, gitInfo, metricsMgr } =
+      props
+    metricsMgr.enqueue("deployButtonInDialog", { clicked: true })
 
     if (!gitInfo) {
       const dialog = NoRepositoryDetected()
@@ -132,6 +136,10 @@ export function DeployDialog(props: DeployDialogProps): ReactElement {
                 </Button>
                 <Button
                   onClick={() => {
+                    metricsMgr.enqueue(
+                      "readMoreCommunityCloudInDeployDialog",
+                      { clicked: true }
+                    )
                     window.open(STREAMLIT_COMMUNITY_CLOUD_DOCS_URL, "_blank")
                   }}
                   kind={Kind.MINIMAL}
@@ -158,6 +166,10 @@ export function DeployDialog(props: DeployDialogProps): ReactElement {
               <StyledActionsWrapper>
                 <Button
                   onClick={() => {
+                    metricsMgr.enqueue(
+                      "readMoreDeployTutorialInDeployDialog",
+                      { clicked: true }
+                    )
                     window.open(STREAMLIT_DEPLOY_TUTORIAL_URL, "_blank")
                   }}
                   kind={Kind.MINIMAL}
