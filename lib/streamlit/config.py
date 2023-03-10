@@ -457,17 +457,17 @@ _create_option(
 _create_option(
     "client.toolbarMode",
     description="""
-        Change the visibility of items in the toolbar and options menu (top right of
-        the app).
+        Change the visibility of items in the toolbar, options menu,
+        and settings dialog (top right of the app).
 
         Allowed values:
-
-        * “auto”      : Show the developer options if the app is accessed through localhost
-                        and hide them otherwise.
+        * “auto”      : Show the developer options if the app is accessed through
+                        localhost and hide them otherwise.
         * “developer” : Show the developer options.
         * “viewer”    : Hide the developer options.
-        * “minimal”   : Show a minimal set of options on Streamlit Community Cloud
-                        and hide the menu locally or on custom deployments.
+        * “minimal”   : Show only options set externally (e.g. through
+                        Streamlit Community Cloud) or through st.set_page_config.
+                        If there are no options left, hide the menu.
 """,
     default_val="auto",
     type_=str,
