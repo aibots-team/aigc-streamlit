@@ -149,7 +149,7 @@ export const isLocalhost = (): boolean => {
 export const showDevelopmentMenu = (
   hostIsOwner: boolean | undefined,
   toolbarMode: Config.ToolbarMode
-) => {
+): boolean => {
   if (toolbarMode == Config.ToolbarMode.DEVELOPER) {
     return true
   }
