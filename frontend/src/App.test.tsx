@@ -28,6 +28,7 @@ import {
   PageInfo,
   PageNotFound,
   PagesChanged,
+  Config,
 } from "src/autogen/proto"
 import { HostCommunicationHOC } from "src/hocs/withHostCommunication"
 import {
@@ -50,7 +51,6 @@ import { DialogType, StreamlitDialog } from "./components/core/StreamlitDialog"
 import { App, Props } from "./App"
 import MainMenu from "./components/core/MainMenu"
 import ToolbarActions from "./components/core/ToolbarActions"
-import { Config } from "./autogen/proto"
 
 jest.mock("src/lib/ConnectionManager")
 
